@@ -1,0 +1,32 @@
+cmake_minimum_required(VERSION 3.9)
+project(minimal_LTO_Example CXX)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+message(STATUS "Configuring 'without_lto' target...")
+add_executable(without_lto main.cpp helper.cpp)
+target_compile_options(without_lto PRIVATE -O2)
+
+message(STATUS "Configuring 'with_lto' target...")
+include(CheckIPOSupported)
+check_ipo_supported(RESULT ipo_available)
+
+if(ipo_available)
+    message(STATUS "LTO (Interprocedural Optimization) is supported by the compiler.")
+    add_executable(with_lto main.cpp helper.cpp)
+    target_compile_options(with_lto PRIVATE -O2)
+    set_target_properties(with_lto PROPERTIES
+      INTERPROCEDURAL_OPTIMIZATION TRUE
+    )
+    # equivalent to below
+    #target_compile_options(with_lto PRIVATE -O2 -flto)
+    #target_link_options(with_lto PRIVATE -flto)
+else()
+    message(WARNING "LTO (Interprocedural Optimization) is not supported by the compiler. 'with_lto' target will not be built with LTO.")
+    add_executable(with_lto main.cpp helper.cpp)
+    target_compile_options(with_lto PRIVATE -O2)
+endif()
+
+message(STATUS "\nBuild complete. To run the test, execute the following commands in your build directory:")
+message(STATUS "  time ./without_lto")
+message(STATUS "  time ./with_lto")
